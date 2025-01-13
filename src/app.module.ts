@@ -28,3 +28,12 @@ import { QuestionModule } from './question/question.module';
   providers: [AppService],
 })
 export class AppModule {}
+
+// docker help
+// docker run -d \
+//   --name plusepoll \
+//   -v /path/to/custom/my.cnf:/etc/mysql/my.cnf \
+//   -e MYSQL_ROOT_PASSWORD=shervangh19@@ \
+//   -e MYSQL_DATABASE=plusepoll_db \
+//   -p 5050:3306 \
+//   mysql:latest
