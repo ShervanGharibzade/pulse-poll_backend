@@ -1,10 +1,16 @@
-import { IsString, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
+import { IsUnique } from 'src/custom-validator/custom_validator';
 
 export class CreateUserDto {
   @IsString()
+  @IsNotEmpty()
+  @IsUnique({
+    tableName: 'user',
+    column: 'username',
+  })
   username: string;
 
   @IsString()
-  @MinLength(6)
+  @IsNotEmpty()
   password: string;
 }
