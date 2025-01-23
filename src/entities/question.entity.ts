@@ -13,7 +13,7 @@ export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: false })
   text: string;
 
   @ManyToOne(() => User, (user) => user.questions)

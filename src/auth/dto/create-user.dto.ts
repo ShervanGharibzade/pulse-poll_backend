@@ -12,5 +12,13 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsUnique({
+    tableName: 'user',
+    column: 'email',
+  })
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
   password: string;
 }

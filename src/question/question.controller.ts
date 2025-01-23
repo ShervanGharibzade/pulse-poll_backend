@@ -1,16 +1,19 @@
-import { Controller, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { QuestionService } from './question.service';
+import { AuthGuard } from 'src/auth/authGuard';
 
 @Controller('/questions')
 export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
 
   @Post('create')
+  @UseGuards(AuthGuard)
   async createQuestion(@Body() body: { userId: number; text: string }) {
     return this.questionService.createQuestion(body.userId, body.text);
   }
 
   @Post(':id/answer')
+  @UseGuards(AuthGuard)
   async addAnswer(
     @Param('id') questionId: number,
     @Body() body: { text: string },

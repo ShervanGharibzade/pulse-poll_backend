@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Question } from './entities/question.entity';
 import { Answer } from './entities/answer.entity';
 import { QuestionModule } from './question/question.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/authGuard';
+import { UserController } from './user/user.controller';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -23,9 +28,14 @@ import { QuestionModule } from './question/question.module';
       connectTimeout: 10000,
       synchronize: true,
     }),
+    JwtModule.register({
+      secret: 'my-very-strong-secret-key-12345', // Make sure the secret is set
+      signOptions: { expiresIn: '1h' },
+    }),
+    UserModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, UserController],
+  providers: [AppService, { provide: APP_GUARD, useClass: AuthGuard }],
 })
 export class AppModule {}
 
