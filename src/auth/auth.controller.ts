@@ -4,6 +4,8 @@ import {
   Post,
   HttpException,
   HttpStatus,
+  Delete,
+  Headers,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -17,22 +19,46 @@ export class AuthController {
   @Post('signup')
   async signup(
     @Body() createUserDto: CreateUserDto,
-  ): Promise<{ token: string; username: string }> {
+  ): Promise<{ token: string }> {
     try {
       const token = await this.authService.signup(createUserDto);
-      return { token, username: createUserDto.username };
+      return {
+        token,
+      };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
+  @Delete('signout')
+  async signout(
+    @Headers('authorization') token: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const authToken = token?.replace('Bearer ', '');
+
+    if (!authToken) {
+      throw new HttpException(
+        'Authorization token is missing',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    try {
+      await this.authService.signout(authToken);
+      return { success: true, message: 'Signout successfully done' };
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'An error occurred during signout',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   @Post('login')
-  async login(
-    @Body() loginUserDto: LoginUserDto,
-  ): Promise<{ token: string; username: string }> {
+  async login(@Body() loginUserDto: LoginUserDto): Promise<{ token: string }> {
     try {
       const token = await this.authService.login(loginUserDto);
-      return { token, username: loginUserDto.username };
+      return { token };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
     }

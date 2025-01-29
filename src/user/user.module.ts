@@ -4,9 +4,16 @@ import { UserController } from './user.controller';
 import { User } from 'src/entities/user.entity';
 import { Question } from 'src/entities/question.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Question])],
+  imports: [
+    TypeOrmModule.forFeature([User, Question]),
+    JwtModule.register({
+      secret: 'my-very-strong-secret-key-12345',
+      signOptions: { expiresIn: '1h' },
+    }),
+  ],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],

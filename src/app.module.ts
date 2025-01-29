@@ -6,8 +6,6 @@ import { User } from './entities/user.entity';
 import { Question } from './entities/question.entity';
 import { Answer } from './entities/answer.entity';
 import { QuestionModule } from './question/question.module';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth/authGuard';
 import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
@@ -35,7 +33,7 @@ import { JwtModule } from '@nestjs/jwt';
     UserModule,
   ],
   controllers: [AppController, UserController],
-  providers: [AppService, { provide: APP_GUARD, useClass: AuthGuard }],
+  providers: [AppService],
 })
 export class AppModule {}
 

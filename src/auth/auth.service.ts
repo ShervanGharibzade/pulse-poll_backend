@@ -39,12 +39,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { username: user.username, userId: user.id };
-    return this.jwtService.sign(payload);
+    return user.token;
   }
 
   async signup(createUserDto: CreateUserDto): Promise<string> {
-    const { username, password } = createUserDto;
+    const { username, password, email } = createUserDto;
 
     const existingUser = await this.userService.findByUsername(username);
     if (existingUser) {
@@ -56,14 +55,35 @@ export class AuthService {
     const user = this.userService.create({
       username,
       password: hashedPassword,
+      email: email,
+      token: '',
     });
+
+    const payload = { username: user.username, userId: user.id };
+    const token = this.jwtService.sign(payload);
+
+    user.token = token;
 
     await this.userService.save(user);
 
-    const payload = { username: user.username, userId: user.id };
-
-    return this.jwtService.sign(payload);
+    return token;
   }
+
+  async signout(token: string): Promise<string> {
+    const user = await this.userService.findByToken(token);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const payload = { username: user.username, userId: user.id };
+    const newToken = this.jwtService.sign(payload);
+    console.log(user.id, 'id');
+
+    await this.userService.updateUserToken(user.id.toString(), newToken);
+
+    return 'signout successfully done';
+  }
+
   async sendPasswordResetEmail(email: string): Promise<void> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
