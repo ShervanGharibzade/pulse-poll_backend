@@ -11,11 +11,7 @@ import { JwtModule } from '@nestjs/jwt';
     TypeOrmModule.forFeature([User, Question]),
     JwtModule.register({
       secret: 'my-very-strong-secret-key-12345',
-<<<<<<< Updated upstream
-      signOptions: { expiresIn: '1h' },
-=======
       signOptions: { expiresIn: '0' },
->>>>>>> Stashed changes
     }),
   ],
   controllers: [UserController],

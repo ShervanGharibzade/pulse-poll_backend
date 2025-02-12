@@ -28,10 +28,6 @@ export class UserController {
       }
 
       const token = authHeader.split(' ')[1];
-<<<<<<< Updated upstream
-      console.log(token);
-=======
->>>>>>> Stashed changes
 
       if (!token) {
         throw new HttpException(
@@ -41,10 +37,6 @@ export class UserController {
       }
 
       const tt = await this.userService.findAllUsersWithTokens();
-<<<<<<< Updated upstream
-      console.log(tt);
-=======
->>>>>>> Stashed changes
       const user = await this.userService.findByToken(token);
 
       if (!user) {
