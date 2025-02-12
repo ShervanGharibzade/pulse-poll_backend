@@ -1,24 +1,26 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
+  Entity,
   ManyToOne,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from './user.entity';
 import { Answer } from './answer.entity';
+import { User } from './user.entity';
 
+// question.entity.ts
 @Entity()
 export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column()
   text: string;
 
+  @OneToMany(() => Answer, (answer) => answer.question, { cascade: true })
+  answers: Answer[];
+
+  // Add user relationship if needed
   @ManyToOne(() => User, (user) => user.questions)
   user: User;
-
-  @OneToMany(() => Answer, (answer) => answer.question)
-  answers: Answer[];
 }

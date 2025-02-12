@@ -28,7 +28,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     JwtModule.register({
       secret: 'my-very-strong-secret-key-12345', // Make sure the secret is set
-      signOptions: { expiresIn: '1h' },
+      signOptions: { expiresIn: '0' },
     }),
     UserModule,
   ],

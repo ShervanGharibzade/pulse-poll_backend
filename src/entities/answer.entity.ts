@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { Question } from './question.entity';
 
+// answer.entity.ts
 @Entity()
 export class Answer {
   @PrimaryGeneratedColumn()
@@ -9,12 +10,14 @@ export class Answer {
   @Column()
   text: string;
 
-  @Column({ default: false })
-  isCorrect: boolean;
+  @Column()
+  isCurrect: boolean;
 
-  @Column({ default: 0 })
-  vote_portion: number;
+  @Column()
+  votePortion: number;
 
-  @ManyToOne(() => Question, (question) => question.answers)
+  @ManyToOne(() => Question, (question) => question.answers, {
+    onDelete: 'CASCADE',
+  })
   question: Question;
 }

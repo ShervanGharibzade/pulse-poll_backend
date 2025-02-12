@@ -76,7 +76,10 @@ export class UserService {
     }
 
     user.token = newToken;
+<<<<<<< Updated upstream
     console.log(newToken, 'new');
+=======
+>>>>>>> Stashed changes
 
     await this.userRepository.save(user);
   }

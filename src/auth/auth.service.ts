@@ -77,7 +77,10 @@ export class AuthService {
 
     const payload = { username: user.username, userId: user.id };
     const newToken = this.jwtService.sign(payload);
+<<<<<<< Updated upstream
     console.log(user.id, 'id');
+=======
+>>>>>>> Stashed changes
 
     await this.userService.updateUserToken(user.id.toString(), newToken);
 

@@ -1,21 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Answer } from 'src/entities/answer.entity';
-import { Question } from 'src/entities/question.entity';
-import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt'; // Optional, for token validation
+import { Question } from 'src/entities/question.entity';
+import { Answer } from 'src/entities/answer.entity';
+import { CreateQuestionDto } from 'src/auth/dto/create-question';
 
 @Injectable()
 export class QuestionService {
   constructor(
     @InjectRepository(Question)
-    private questionRepository: Repository<Question>,
+    private readonly questionRepository: Repository<Question>,
     @InjectRepository(Answer)
-    private answerRepository: Repository<Answer>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly answerRepository: Repository<Answer>,
+    private readonly jwtService: JwtService,
   ) {}
 
+<<<<<<< Updated upstream
   async createQuestion(token: string, text: string): Promise<Question> {
     // Find the user by ID
     const user = await this.userRepository.findOne({ where: { token } });
@@ -84,13 +89,29 @@ export class QuestionService {
     votePortion: number = 0,
   ): Promise<Answer> {
     // Find the question by ID
+=======
+  async getAllQuestions() {
+    try {
+      return await this.questionRepository.find({
+        relations: ['answers'],
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getQuestionById(id: number) {
+>>>>>>> Stashed changes
     const question = await this.questionRepository.findOne({
-      where: { id: questionId },
+      where: { id },
     });
     if (!question) {
-      throw new Error('Question not found');
+      throw new NotFoundException('Question not found');
     }
+    return question;
+  }
 
+<<<<<<< Updated upstream
     // Create the answer
     const answer = this.answerRepository.create({
       text,
@@ -140,5 +161,39 @@ export class QuestionService {
 
     // Save and return the updated answer
     return await this.answerRepository.save(answer);
+=======
+  async createQuestionAndAnswers(
+    token: string,
+    createQuestionDto: CreateQuestionDto,
+  ) {
+    try {
+      const decodedToken = this.jwtService.verify(token);
+      if (!decodedToken) {
+        throw new Error('Invalid token');
+      }
+
+      const newQuestion = this.questionRepository.create({
+        text: createQuestionDto.Question,
+        answers: createQuestionDto.Answers,
+      });
+
+      const savedQuestion = await this.questionRepository.save(newQuestion);
+
+      const answers = createQuestionDto.Answers.map((answer) => {
+        const newAnswer = this.answerRepository.create({
+          text: answer.text,
+          isCurrect: answer.isCurrect,
+          votePortion: answer.votePortion,
+        });
+        return newAnswer;
+      });
+
+      await this.answerRepository.save(answers);
+
+      return savedQuestion;
+    } catch (error) {
+      throw new Error(`Error creating question: ${error.message}`);
+    }
+>>>>>>> Stashed changes
   }
 }
