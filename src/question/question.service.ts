@@ -9,20 +9,27 @@ import { JwtService } from '@nestjs/jwt'; // Optional, for token validation
 import { Question } from 'src/entities/question.entity';
 import { Answer } from 'src/entities/answer.entity';
 import { CreateQuestionDto } from 'src/auth/dto/create-question';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class QuestionService {
   constructor(
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     @InjectRepository(Answer)
     private readonly answerRepository: Repository<Answer>,
     private readonly jwtService: JwtService,
   ) {}
 
-  async getAllQuestions() {
+  async getUserQuestions(token: string) {
     try {
+      const user = await this.userRepository.findOne({
+        where: { token: token },
+      });
       return await this.questionRepository.find({
+        where: { user: { id: user.id } },
         relations: ['answers'],
       });
     } catch (error) {
@@ -45,32 +52,33 @@ export class QuestionService {
     createQuestionDto: CreateQuestionDto,
   ) {
     try {
-      const decodedToken = this.jwtService.verify(token);
-      if (!decodedToken) {
-        throw new Error('Invalid token');
-      }
+      const user = await this.userRepository.findOne({
+        where: { token: token },
+      });
 
       const newQuestion = this.questionRepository.create({
         text: createQuestionDto.Question,
-        answers: createQuestionDto.Answers,
+        user: { id: user.id },
       });
 
       const savedQuestion = await this.questionRepository.save(newQuestion);
 
-      const answers = createQuestionDto.Answers.map((answer) => {
-        const newAnswer = this.answerRepository.create({
+      const answers = createQuestionDto.Answers.map((answer) =>
+        this.answerRepository.create({
           text: answer.text,
           isCurrect: answer.isCurrect,
           votePortion: answer.votePortion,
-        });
-        return newAnswer;
-      });
+          question: savedQuestion,
+        }),
+      );
 
       await this.answerRepository.save(answers);
 
-      return savedQuestion;
+      return { ...savedQuestion, answers };
     } catch (error) {
-      throw new Error(`Error creating question: ${error.message}`);
+      throw new InternalServerErrorException(
+        `Error creating question: ${error.message}`,
+      );
     }
   }
 }

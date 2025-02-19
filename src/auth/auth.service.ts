@@ -91,7 +91,7 @@ export class AuthService {
 
     const token = this.jwtService.sign(
       { userId: user.id },
-      { expiresIn: '1h' },
+      { expiresIn: '365d' },
     );
 
     // Save the token in the database or use a field like `resetToken`
