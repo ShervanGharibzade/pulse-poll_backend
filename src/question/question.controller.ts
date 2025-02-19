@@ -32,9 +32,13 @@ export class QuestionController {
   }
 
   @Get(':id')
-  async getQuestionById(@Param('id') id: number) {
+  async getQuestionById(
+    @Param('id') id: number,
+    @Headers('authorization') authHeader: string,
+  ) {
     try {
-      return await this.questionService.getQuestionById(id);
+      const token = authHeader?.split(' ')[1];
+      return await this.questionService.getQuestionById(id, token);
     } catch (error) {
       throw new NotFoundException(error.message);
     }

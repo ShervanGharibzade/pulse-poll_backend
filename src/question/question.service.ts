@@ -37,13 +37,24 @@ export class QuestionService {
     }
   }
 
-  async getQuestionById(id: number) {
-    const question = await this.questionRepository.findOne({
-      where: { id },
+  async getQuestionById(qId: number, token: string) {
+    const user = await this.userRepository.findOne({
+      where: { token: token },
     });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const question = await this.questionRepository.findOne({
+      where: { id: qId, user: { id: user.id } },
+      relations: ['answers'],
+    });
+
     if (!question) {
       throw new NotFoundException('Question not found');
     }
+
     return question;
   }
 
