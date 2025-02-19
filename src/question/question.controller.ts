@@ -44,6 +44,19 @@ export class QuestionController {
     }
   }
 
+  @Post('/create/view')
+  async addVoteToAnswers(
+    @Param('id') id: number,
+    @Headers('authorization') authHeader: string,
+  ) {
+    try {
+      const token = authHeader?.split(' ')[1];
+      return await this.questionService.getQuestionById(id, token);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
   @Post('create')
   @UseGuards(AuthGuard)
   async createQuestion(

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt'; // Optional, for token validation
+import { JwtService } from '@nestjs/jwt';
 import { Question } from 'src/entities/question.entity';
 import { Answer } from 'src/entities/answer.entity';
 import { CreateQuestionDto } from 'src/auth/dto/create-question';
@@ -38,9 +38,7 @@ export class QuestionService {
   }
 
   async getQuestionById(qId: number, token: string) {
-    const user = await this.userRepository.findOne({
-      where: { token: token },
-    });
+    const user = await this.userRepository.findOne({ where: { token: token } });
 
     if (!user) {
       throw new NotFoundException('User not found');
