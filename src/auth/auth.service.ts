@@ -6,9 +6,10 @@ import {
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { LoginUserDto } from './dto/login-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { LoginUserDto } from '../dto/login-user.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
+import { MemberVoting } from 'src/dto/member-voting';
 
 @Injectable()
 export class AuthService {
@@ -67,6 +68,15 @@ export class AuthService {
     await this.userService.save(user);
 
     return token;
+  }
+
+  async signupMember(memberVoting: MemberVoting): Promise<string> {
+    const { is_voted, email } = memberVoting;
+
+    const existingUser = await this.userService.findByUsername(username);
+    if (existingUser) {
+      throw new Error('Username is already taken');
+    }
   }
 
   async signout(token: string): Promise<string> {

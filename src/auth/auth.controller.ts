@@ -8,9 +8,10 @@ import {
   Headers,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginUserDto } from './dto/login-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
+import { LoginUserDto } from '../dto/login-user.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { MemberVoting } from '../dto/member-voting';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 @Controller('/auth')
 export class AuthController {
@@ -22,6 +23,20 @@ export class AuthController {
   ): Promise<{ token: string }> {
     try {
       const token = await this.authService.signup(createUserDto);
+      return {
+        token,
+      };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('/signup/member')
+  async signupMember(
+    @Body() memberVoting: MemberVoting,
+  ): Promise<{ token: string }> {
+    try {
+      const token = await this.authService.signupMember(memberVoting);
       return {
         token,
       };

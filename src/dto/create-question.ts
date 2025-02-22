@@ -1,5 +1,6 @@
 export class CreateQuestionDto {
   Question: string;
+  is_publish: boolean;
   Answers: AnswerDto[];
 }
 

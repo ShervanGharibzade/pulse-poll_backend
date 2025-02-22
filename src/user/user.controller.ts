@@ -36,7 +36,6 @@ export class UserController {
         );
       }
 
-      const tt = await this.userService.findAllUsersWithTokens();
       const user = await this.userService.findByToken(token);
 
       if (!user) {

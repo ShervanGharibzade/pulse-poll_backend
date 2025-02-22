@@ -10,6 +10,8 @@ import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { MemberController } from './member/member.controller';
+import { MemberModule } from './member/member.module';
 
 @Module({
   imports: [
@@ -31,8 +33,9 @@ import { JwtModule } from '@nestjs/jwt';
       signOptions: { expiresIn: '365d' },
     }),
     UserModule,
+    MemberModule,
   ],
-  controllers: [AppController, UserController],
+  controllers: [AppController, UserController, MemberController],
   providers: [AppService],
 })
 export class AppModule {}

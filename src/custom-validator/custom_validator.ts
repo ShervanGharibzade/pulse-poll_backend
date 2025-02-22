@@ -7,6 +7,7 @@ import {
   registerDecorator,
   ValidationOptions,
 } from 'class-validator';
+import { JwtService } from '@nestjs/jwt';
 
 interface IsUniqueInterface {
   tableName: string;
@@ -16,7 +17,10 @@ interface IsUniqueInterface {
 @ValidatorConstraint({ name: 'IsUnique', async: true })
 @Injectable()
 export class IsUniqueConstraint implements ValidatorConstraintInterface {
-  constructor(private readonly entityManager: EntityManager) {}
+  constructor(
+    private readonly entityManager: EntityManager,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async validate(value: any, args?: ValidationArguments): Promise<boolean> {
     const { tableName, column }: IsUniqueInterface = args.constraints[0];
@@ -50,4 +54,13 @@ export function IsUnique(
       options: validationOptions,
     });
   };
+}
+
+export function validateToken(token: string): boolean {
+  try {
+    this.jwtService.verify(token);
+    return true;
+  } catch (error) {
+    return false;
+  }
 }

@@ -1,4 +1,5 @@
 import {
+  BeforeInsert,
   Column,
   Entity,
   ManyToOne,
@@ -7,20 +8,32 @@ import {
 } from 'typeorm';
 import { Answer } from './answer.entity';
 import { User } from './user.entity';
+import { v4 as uuidv4 } from 'uuid';
 
-// question.entity.ts
 @Entity()
 export class Question {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ unique: true })
+  uid: string;
+
   @Column()
   text: string;
+
+  @Column({ default: false })
+  is_publish: boolean;
 
   @OneToMany(() => Answer, (answer) => answer.question, { cascade: true })
   answers: Answer[];
 
-  // Add user relationship if needed
   @ManyToOne(() => User, (user) => user.questions)
   user: User;
+
+  @BeforeInsert()
+  generateUid() {
+    if (!this.uid) {
+      this.uid = uuidv4();
+    }
+  }
 }

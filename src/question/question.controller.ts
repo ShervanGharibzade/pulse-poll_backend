@@ -10,10 +10,12 @@ import {
   Headers,
   NotFoundException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { AuthGuard } from 'src/auth/authGuard';
-import { CreateQuestionDto } from 'src/auth/dto/create-question';
+import { CreateQuestionDto } from 'src/dto/create-question';
+import { validateToken } from 'src/custom-validator/custom_validator';
 
 @Controller('questions')
 export class QuestionController {
@@ -44,16 +46,42 @@ export class QuestionController {
     }
   }
 
-  @Post('/create/view')
-  async addVoteToAnswers(
-    @Param('id') id: number,
+  @Get('/published/questions')
+  async publishQuestionList(@Headers('authorization') authHeader: string) {
+    try {
+      const token = authHeader?.split(' ')[1];
+
+      const questions =
+        await this.questionService.getUserQuestionsPublished(token);
+      return questions;
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  @Post('/publish/:uid')
+  async publishQuestion(
+    @Param('uid') uid: string,
     @Headers('authorization') authHeader: string,
   ) {
     try {
-      const token = authHeader?.split(' ')[1];
-      return await this.questionService.getQuestionById(id, token);
+      if (!authHeader) {
+        throw new UnauthorizedException('Authorization header missing');
+      }
+
+      const token = authHeader.split(' ')[1];
+      if (!token) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
+      await this.questionService.updateIsPublish(uid);
+
+      return {
+        massage: 'The question has been successfully published.',
+        status: 201,
+      };
     } catch (error) {
-      throw new NotFoundException(error.message);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
