@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
@@ -7,6 +8,7 @@ import { Repository } from 'typeorm';
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async findByEmail(email: string) {
@@ -36,26 +38,22 @@ export class UserService {
   }
 
   async findByToken(token: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({ where: { token } });
+    const username = await this.jwtService.decode(token);
+    const user = await this.userRepository.findOne({ where: { username } });
     if (!user) {
       throw new Error('User not found');
     }
     return user;
   }
 
-  async findAllUsersWithTokens(): Promise<
-    { username: string; token: string }[]
-  > {
+  async findAllUsersWithTokens(): Promise<{ username: string }[]> {
     try {
-      // Query the database to get all users and their tokens
       const users = await this.userRepository.find({
-        select: ['username', 'token'],
+        select: ['username'],
       });
 
-      // Map the users to return only their username and token
       const usersWithTokens = users.map((user) => ({
         username: user.username,
-        token: user.token,
       }));
 
       return usersWithTokens;
@@ -68,39 +66,13 @@ export class UserService {
     }
   }
 
-  async updateUserToken(userId: string, newToken: string): Promise<void> {
-    const user = await this.findById(Number(userId));
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    user.token = newToken;
-
-    await this.userRepository.save(user);
-  }
-
   create(userData: {
     username: string;
     password: string;
     email: string;
-    token: string;
   }): User {
     const user = this.userRepository.create(userData);
     return user;
-  }
-  async deleteAllUserData(): Promise<void> {
-    try {
-      // Delete all user records from the 'users' table
-      await this.userRepository.clear(); // Clear all users from the database
-      console.log('All user data has been deleted.');
-    } catch (error) {
-      console.error('Error deleting user data:', error);
-      throw new Error('Failed to delete all user data.');
-    }
-  }
-  async save(user: User): Promise<User> {
-    return this.userRepository.save(user);
   }
 
   async findById(id: number) {
@@ -113,23 +85,6 @@ export class UserService {
       throw new Error('User not found');
     }
     return user;
-  }
-
-  async updateUserRefreshToken(
-    userId: number,
-    refreshToken: string,
-  ): Promise<void> {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    user.token = refreshToken;
-
-    await this.userRepository.save(user);
   }
 
   async updateUserPassword(userId: number, newPassword: string): Promise<void> {

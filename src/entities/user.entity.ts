@@ -15,9 +15,6 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ nullable: true })
-  token: string;
-
   @OneToMany(() => Question, (question) => question.user)
   questions: Question[];
 }

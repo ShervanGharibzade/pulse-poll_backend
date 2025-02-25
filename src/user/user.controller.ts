@@ -13,7 +13,6 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/info')
-  // @UseGuards(AuthGuard)
   async getUserInfo(
     @Req() req: Request,
   ): Promise<{ username: string; email: string }> {

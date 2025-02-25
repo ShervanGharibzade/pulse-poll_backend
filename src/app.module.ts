@@ -10,16 +10,12 @@ import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
-import { MemberController } from './member/member.controller';
-import { MemberModule } from './member/member.module';
-import { Member } from './entities/member.entity';
 
 @Module({
   imports: [
     AuthModule,
     QuestionModule,
     UserModule,
-    MemberModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: '127.0.0.1',
@@ -27,7 +23,7 @@ import { Member } from './entities/member.entity';
       username: 'root',
       password: 'shervangh19@@',
       database: 'plusepoll_db',
-      entities: [User, Question, Answer, Member],
+      entities: [User, Question, Answer],
       connectTimeout: 10000,
       synchronize: true,
     }),
@@ -36,7 +32,7 @@ import { Member } from './entities/member.entity';
       signOptions: { expiresIn: '365d' },
     }),
   ],
-  controllers: [AppController, UserController, MemberController],
+  controllers: [AppController, UserController],
   providers: [AppService],
 })
 export class AppModule {}

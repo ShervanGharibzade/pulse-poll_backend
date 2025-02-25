@@ -27,6 +27,9 @@ export class Question {
   @OneToMany(() => Answer, (answer) => answer.question, { cascade: true })
   answers: Answer[];
 
+  @Column({ default: 0 })
+  vote_counter: number;
+
   @ManyToOne(() => User, (user) => user.questions)
   user: User;
 

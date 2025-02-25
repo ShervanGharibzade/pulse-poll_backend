@@ -13,8 +13,8 @@ import { UserService } from 'src/user/user.service';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly userService: UserService, // Injecting UserService
-    private readonly jwtService: JwtService, // Injecting JwtService
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async validateUser(username: string, password: string): Promise<User | null> {
@@ -39,7 +39,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return user.token;
+    const token = this.jwtService.sign(username);
+    return token;
   }
 
   async signup(createUserDto: CreateUserDto): Promise<string> {
@@ -56,29 +57,19 @@ export class AuthService {
       username,
       password: hashedPassword,
       email: email,
-      token: '',
     });
 
-    const payload = { username: user.username, userId: user.id };
-    const token = this.jwtService.sign(payload);
-
-    user.token = token;
-
-    await this.userService.save(user);
+    const token = this.jwtService.sign(user.username);
 
     return token;
   }
 
   async signout(token: string): Promise<string> {
-    const user = await this.userService.findByToken(token);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    const username = await this.jwtService.decode(token);
+    const user = await this.userService.findByUsername(username);
+    console.log(user);
 
-    const payload = { username: user.username, userId: user.id };
-    const newToken = this.jwtService.sign(payload);
-
-    await this.userService.updateUserToken(user.id.toString(), newToken);
+    // TODO:create blackList for tokens
 
     return 'signout successfully done';
   }
@@ -94,27 +85,18 @@ export class AuthService {
       { expiresIn: '365d' },
     );
 
-    // Save the token in the database or use a field like `resetToken`
-    await this.userService.updateUserRefreshToken(user.id, token);
-
     // Send email logic (pseudo-code)
     console.log(`Send email to ${email} with token: ${token}`);
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
+  async resetPassword(email: string): Promise<void> {
     try {
-      const payload = this.jwtService.verify(token); // Verify the token
-      const user = await this.userService.findById(payload.userId);
+      const user = await this.userService.findByEmail(email);
 
-      if (!user || user.token !== token) {
+      if (!user) {
         throw new BadRequestException('Invalid or expired reset token');
       }
-
-      // Hash the new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      // Update the user's password and clear the reset token
-      await this.userService.updateUserPassword(user.id, hashedPassword);
+      // TODO: you most send code for reset password
     } catch (error) {
       console.log(error);
       throw new BadRequestException('Invalid or expired reset token');
