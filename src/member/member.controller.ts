@@ -9,14 +9,15 @@ import {
 } from '@nestjs/common';
 import { MemberService } from './member.service';
 import { MemberVoting } from 'src/dto/member-voting';
-import { Question } from 'src/entities/question.entity';
-import { Repository } from 'typeorm';
+import { QuestionService } from 'src/question/question.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('member')
 export class MemberController {
   constructor(
     private readonly memberService: MemberService,
-    private readonly questionRepository: Repository<Question>,
+    private readonly questionService: QuestionService,
+    private readonly jwtService: JwtService,
   ) {}
 
   @Post('signup')
@@ -60,9 +61,9 @@ export class MemberController {
         throw new HttpException(
           {
             message: 'Member not found',
-            statusCode: HttpStatus.NOT_FOUND, // Changed to NOT_FOUND
+            statusCode: HttpStatus.NOT_FOUND,
           },
-          HttpStatus.NOT_FOUND, // Changed to NOT_FOUND
+          HttpStatus.NOT_FOUND,
         );
       }
 
@@ -86,6 +87,7 @@ export class MemberController {
     const logger = new Logger('VotingController');
     const { email, qUid, aId } = body;
 
+    // Extract and verify the authorization token
     const authToken = token?.replace('Bearer ', '');
     if (!authToken) {
       logger.error('Authorization token is missing');
@@ -96,6 +98,17 @@ export class MemberController {
     }
 
     try {
+      const decodedToken = this.jwtService.decode(authToken) as {
+        email: string;
+      };
+      if (!decodedToken || decodedToken.email !== email) {
+        logger.warn(`Invalid token for member ${email}`);
+        throw new HttpException(
+          'Invalid token for the specified member',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
       const member = await this.memberService.getMemberByEmail(email);
       if (!member) {
         logger.warn(`Member with email ${email} not found`);
@@ -119,16 +132,10 @@ export class MemberController {
       member.quesListVoted.push(qUid);
       await this.memberService.updateIsVoted(member.email);
 
-      // Log the actual SQL query being executed
-      const query = this.questionRepository
-        .createQueryBuilder()
-        .update('answer')
-        .set({ votePortion: member.is_voted ? 1 : 0 }) // Ensure votePortion is correctly set
-        .where('id = :aId', { aId });
-
-      logger.log(`Executing query: ${query.getQueryAndParameters()}`); // Log the query and parameters
-      const updatedVote = await query.execute();
-
+      const updatedVote = await this.questionService.updateVotePortion(
+        aId,
+        member.is_voted,
+      );
       if (!updatedVote) {
         logger.error(
           `Failed to update vote count for question ${qUid} and answer ${aId}`,

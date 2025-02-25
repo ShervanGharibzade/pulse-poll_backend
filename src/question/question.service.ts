@@ -15,6 +15,7 @@ import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class QuestionService {
+  private readonly logger = new Logger(QuestionService.name);
   constructor(
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
@@ -24,6 +25,26 @@ export class QuestionService {
     private readonly answerRepository: Repository<Answer>,
   ) {}
 
+  async updateVotePortion(aId: number, isVoted: boolean): Promise<boolean> {
+    try {
+      const result = await this.answerRepository
+        .createQueryBuilder()
+        .update()
+        .set({ votePortion: isVoted ? 1 : 0 })
+        .where('id = :aId', { aId })
+        .execute();
+
+      if (result.affected === 0) {
+        this.logger.warn(`Answer with ID ${aId} not found`);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      this.logger.error('Error updating vote portion', error.stack);
+      throw new Error('Error updating vote portion');
+    }
+  }
   async getUserQuestions(token: string) {
     try {
       const user = await this.userRepository.findOne({

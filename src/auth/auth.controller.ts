@@ -10,7 +10,6 @@ import {
 import { AuthService } from './auth.service';
 import { LoginUserDto } from '../dto/login-user.dto';
 import { CreateUserDto } from '../dto/create-user.dto';
-import { MemberVoting } from '../dto/member-voting';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 @Controller('/auth')
