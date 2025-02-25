@@ -31,20 +31,6 @@ export class AuthController {
     }
   }
 
-  @Post('/signup/member')
-  async signupMember(
-    @Body() memberVoting: MemberVoting,
-  ): Promise<{ token: string }> {
-    try {
-      const token = await this.authService.signupMember(memberVoting);
-      return {
-        token,
-      };
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
   @Delete('signout')
   async signout(
     @Headers('authorization') token: string,

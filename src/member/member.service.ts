@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MemberVoting } from 'src/dto/member-voting';
@@ -32,5 +37,35 @@ export class MemberService {
     });
 
     return this.memberRepository.save(member);
+  }
+
+  async updateIsVoted(email: string): Promise<MemberVoting> {
+    const existingMember = await this.memberRepository.findOne({
+      where: { email },
+    });
+
+    if (!existingMember) {
+      throw new HttpException(
+        `Member with email ${email} not found`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    existingMember.is_voted = true;
+
+    return this.memberRepository.save(existingMember);
+  }
+
+  async getMemberByToken(token: string): Promise<MemberVoting> {
+    const member = await this.memberRepository.findOne({ where: { token } });
+
+    if (!member) {
+      throw new HttpException(
+        'Member not found with the provided token',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return member;
   }
 }

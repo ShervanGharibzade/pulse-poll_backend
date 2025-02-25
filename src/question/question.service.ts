@@ -1,6 +1,9 @@
 import {
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -35,15 +38,9 @@ export class QuestionService {
     }
   }
 
-  async getUserQuestionsPublished(token: string): Promise<Question[]> {
-    const user = await this.userRepository.findOne({ where: { token } });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
+  async getUserQuestionsPublished(): Promise<Question[]> {
     const questions = await this.questionRepository.find({
-      where: { user, is_publish: true },
+      where: { is_publish: true },
       relations: ['answers'],
     });
 
@@ -88,24 +85,50 @@ export class QuestionService {
   }
 
   async updateVoteQuestion(uid: string, aId: number): Promise<Question> {
+    const logger = new Logger('QuestionService');
+
+    // Retrieve the question and its answers from the database
     const question = await this.questionRepository.findOne({
       where: { uid },
       relations: ['answers'],
     });
 
+    // Check if the question exists
     if (!question) {
-      throw new Error('Question not found');
+      const errorMessage = `Question with uid ${uid} not found`;
+      logger.error(errorMessage);
+      throw new HttpException(errorMessage, HttpStatus.NOT_FOUND);
     }
 
+    // Find the answer by ID
     const answer = question.answers.find((a) => a.id === aId);
-
     if (!answer) {
-      throw new Error('Answer not found');
+      const errorMessage = `Answer with ID ${aId} not found for question ${uid}`;
+      logger.error(errorMessage);
+      throw new HttpException(errorMessage, HttpStatus.NOT_FOUND);
     }
 
-    answer.votePortion += 1;
+    // Update the vote count for the answer
+    try {
+      answer.votePortion = (answer.votePortion || 0) + 1;
 
-    return await this.questionRepository.save(question);
+      // Save the updated vote count using a query builder
+      await this.questionRepository
+        .createQueryBuilder()
+        .update('answer')
+        .set({ votePortion: answer.votePortion })
+        .where('id = :aId', { aId })
+        .execute();
+
+      logger.log(
+        `Successfully updated vote count for answer ID ${aId} on question ${uid}`,
+      );
+      return question;
+    } catch (error) {
+      const errorMessage = `Failed to update vote count for answer ID ${aId} on question ${uid}`;
+      logger.error(errorMessage, error.stack);
+      throw new HttpException(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async getQuestionById(qId: number, token: string) {

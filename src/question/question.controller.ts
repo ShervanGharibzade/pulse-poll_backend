@@ -15,7 +15,6 @@ import {
 import { QuestionService } from './question.service';
 import { AuthGuard } from 'src/auth/authGuard';
 import { CreateQuestionDto } from 'src/dto/create-question';
-import { validateToken } from 'src/custom-validator/custom_validator';
 
 @Controller('questions')
 export class QuestionController {
@@ -47,12 +46,9 @@ export class QuestionController {
   }
 
   @Get('/published/questions')
-  async publishQuestionList(@Headers('authorization') authHeader: string) {
+  async publishQuestionList() {
     try {
-      const token = authHeader?.split(' ')[1];
-
-      const questions =
-        await this.questionService.getUserQuestionsPublished(token);
+      const questions = await this.questionService.getUserQuestionsPublished();
       return questions;
     } catch (error) {
       throw new NotFoundException(error.message);

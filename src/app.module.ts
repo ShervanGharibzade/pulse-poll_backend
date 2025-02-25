@@ -12,31 +12,32 @@ import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { MemberController } from './member/member.controller';
 import { MemberModule } from './member/member.module';
+import { Member } from './entities/member.entity';
 
 @Module({
   imports: [
-    AuthModule,
-    QuestionModule,
+    AuthModule, // Assuming this is a separate module for authentication
+    QuestionModule, // Ensure there are no circular dependencies here
+    UserModule, // Module for handling user-related functionality
+    MemberModule, // Handle member-related operations
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: '127.0.0.1',
-      port: 5050,
+      port: 5050, // Make sure this port is correct
       username: 'root',
-      password: 'shervangh19@@',
+      password: 'shervangh19@@', // Ensure this is secure, avoid hardcoding secrets
       database: 'plusepoll_db',
-      entities: [User, Question, Answer],
+      entities: [User, Question, Answer, Member],
       connectTimeout: 10000,
-      synchronize: true,
+      synchronize: true, // Be cautious with this in production, as it auto-syncs the database schema
     }),
     JwtModule.register({
-      secret: 'my-very-strong-secret-key-12345', // Make sure the secret is set
+      secret: 'my-very-strong-secret-key-12345', // Ensure the secret is appropriately secure
       signOptions: { expiresIn: '365d' },
     }),
-    UserModule,
-    MemberModule,
   ],
-  controllers: [AppController, UserController, MemberController],
-  providers: [AppService],
+  controllers: [AppController, UserController, MemberController], // Add controllers for handling routes
+  providers: [AppService], // Services to handle business logic
 })
 export class AppModule {}
 
