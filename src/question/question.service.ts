@@ -1,6 +1,4 @@
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -12,6 +10,7 @@ import { Question } from 'src/entities/question.entity';
 import { Answer } from 'src/entities/answer.entity';
 import { CreateQuestionDto } from 'src/dto/create-question';
 import { User } from 'src/entities/user.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class QuestionService {
@@ -23,32 +22,14 @@ export class QuestionService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Answer)
     private readonly answerRepository: Repository<Answer>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async updateVotePortion(aId: number, isVoted: boolean): Promise<boolean> {
-    try {
-      const result = await this.answerRepository
-        .createQueryBuilder()
-        .update()
-        .set({ votePortion: isVoted ? 1 : 0 })
-        .where('id = :aId', { aId })
-        .execute();
-
-      if (result.affected === 0) {
-        this.logger.warn(`Answer with ID ${aId} not found`);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      this.logger.error('Error updating vote portion', error.stack);
-      throw new Error('Error updating vote portion');
-    }
-  }
   async getUserQuestions(token: string) {
     try {
+      const username = await this.jwtService.decode(token);
       const user = await this.userRepository.findOne({
-        where: { token: token },
+        where: { username },
       });
       return await this.questionRepository.find({
         where: { user: { id: user.id } },
@@ -73,7 +54,8 @@ export class QuestionService {
   }
 
   async questionVoting(token: string): Promise<Question[]> {
-    const user = await this.userRepository.findOne({ where: { token } });
+    const username = await this.jwtService.decode(token);
+    const user = await this.userRepository.findOne({ where: { username } });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -105,55 +87,9 @@ export class QuestionService {
     return await this.questionRepository.save(question);
   }
 
-  async updateVoteQuestion(uid: string, aId: number): Promise<Question> {
-    const logger = new Logger('QuestionService');
-
-    // Retrieve the question and its answers from the database
-    const question = await this.questionRepository.findOne({
-      where: { uid },
-      relations: ['answers'],
-    });
-
-    // Check if the question exists
-    if (!question) {
-      const errorMessage = `Question with uid ${uid} not found`;
-      logger.error(errorMessage);
-      throw new HttpException(errorMessage, HttpStatus.NOT_FOUND);
-    }
-
-    // Find the answer by ID
-    const answer = question.answers.find((a) => a.id === aId);
-    if (!answer) {
-      const errorMessage = `Answer with ID ${aId} not found for question ${uid}`;
-      logger.error(errorMessage);
-      throw new HttpException(errorMessage, HttpStatus.NOT_FOUND);
-    }
-
-    // Update the vote count for the answer
-    try {
-      answer.votePortion = (answer.votePortion || 0) + 1;
-
-      // Save the updated vote count using a query builder
-      await this.questionRepository
-        .createQueryBuilder()
-        .update('answer')
-        .set({ votePortion: answer.votePortion })
-        .where('id = :aId', { aId })
-        .execute();
-
-      logger.log(
-        `Successfully updated vote count for answer ID ${aId} on question ${uid}`,
-      );
-      return question;
-    } catch (error) {
-      const errorMessage = `Failed to update vote count for answer ID ${aId} on question ${uid}`;
-      logger.error(errorMessage, error.stack);
-      throw new HttpException(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
   async getQuestionById(qId: number, token: string) {
-    const user = await this.userRepository.findOne({ where: { token: token } });
+    const username = await this.jwtService.decode(token);
+    const user = await this.userRepository.findOne({ where: { username } });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -172,7 +108,8 @@ export class QuestionService {
   }
 
   async getQuestionByUid(uid: string, token: string) {
-    const user = await this.userRepository.findOne({ where: { token: token } });
+    const username = await this.jwtService.decode(token);
+    const user = await this.userRepository.findOne({ where: { username } });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -195,8 +132,9 @@ export class QuestionService {
     createQuestionDto: CreateQuestionDto,
   ) {
     try {
+      const username = await this.jwtService.decode(token);
       const user = await this.userRepository.findOne({
-        where: { token: token },
+        where: { username },
       });
 
       const newQuestion = this.questionRepository.create({
@@ -209,8 +147,7 @@ export class QuestionService {
       const answers = createQuestionDto.Answers.map((answer) =>
         this.answerRepository.create({
           text: answer.text,
-          isCurrect: answer.isCurrect,
-          votePortion: answer.votePortion,
+          is_correct: answer.isCurrect,
           question: savedQuestion,
         }),
       );

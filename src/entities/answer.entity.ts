@@ -10,7 +10,7 @@ export class Answer {
   text: string;
 
   @Column()
-  isCurrect: boolean;
+  is_correct: boolean;
 
   @ManyToOne(() => Question, (question) => question.answers, {
     onDelete: 'CASCADE',
