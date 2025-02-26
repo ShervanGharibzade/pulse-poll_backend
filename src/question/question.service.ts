@@ -40,6 +40,22 @@ export class QuestionService {
     }
   }
 
+  async getQuestionPublishedByUserId(user_id: number) {
+    try {
+      const questions = await this.questionRepository.find({
+        where: {
+          user: { id: user_id },
+          is_publish: true,
+        },
+      });
+
+      return questions;
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      throw new Error('Error fetching questions');
+    }
+  }
+
   async getUserQuestionsPublished(): Promise<Question[]> {
     const questions = await this.questionRepository.find({
       where: { is_publish: true },
@@ -97,6 +113,19 @@ export class QuestionService {
 
     const question = await this.questionRepository.findOne({
       where: { id: qId, user: { id: user.id } },
+      relations: ['answers'],
+    });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    return question;
+  }
+
+  async findQuestionById(qId: number) {
+    const question = await this.questionRepository.findOne({
+      where: { id: qId },
       relations: ['answers'],
     });
 

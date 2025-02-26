@@ -9,6 +9,9 @@ export class Answer {
   @Column()
   text: string;
 
+  @Column({ default: 0 })
+  total_vote: number;
+
   @Column()
   is_correct: boolean;
 

@@ -10,12 +10,16 @@ import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
+import { QuestionVotedService } from './question-voted/question-voted.service';
+import { QuestionVotedModule } from './question-voted/question-voted.module';
+import { QuestionVoted } from './entities/questionVoted.entity';
 
 @Module({
   imports: [
     AuthModule,
     QuestionModule,
     UserModule,
+    QuestionVotedModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: '127.0.0.1',
@@ -23,7 +27,7 @@ import { JwtModule } from '@nestjs/jwt';
       username: 'root',
       password: 'shervangh19@@',
       database: 'plusepoll_db',
-      entities: [User, Question, Answer],
+      entities: [User, Question, Answer, QuestionVoted],
       connectTimeout: 10000,
       synchronize: true,
     }),

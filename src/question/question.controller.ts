@@ -24,8 +24,6 @@ export class QuestionController {
   async getUserQuestions(@Headers('authorization') authHeader: string) {
     try {
       const token = authHeader?.split(' ')[1];
-      console.log(token);
-
       return await this.questionService.getUserQuestions(token);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
