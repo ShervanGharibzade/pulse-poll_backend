@@ -10,7 +10,6 @@ import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
-import { QuestionVotedService } from './question-voted/question-voted.service';
 import { QuestionVotedModule } from './question-voted/question-voted.module';
 import { QuestionVoted } from './entities/questionVoted.entity';
 
