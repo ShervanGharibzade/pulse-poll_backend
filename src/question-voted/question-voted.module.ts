@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { QuestionVotedController } from './question-voted.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Question } from 'src/entities/question.entity';
@@ -12,12 +12,12 @@ import { QuestionModule } from 'src/question/question.module';
 
 @Module({
   imports: [
-    UserModule,
-    QuestionModule,
+    forwardRef(() => UserModule),
+    forwardRef(() => QuestionModule),
     TypeOrmModule.forFeature([Question, Answer, User, QuestionVoted]),
     JwtModule.register({
       secret: 'my-very-strong-secret-key-12345',
-      signOptions: { expiresIn: '365d' },
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [QuestionVotedController],

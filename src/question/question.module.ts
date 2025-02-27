@@ -13,7 +13,7 @@ import { QuestionVoted } from 'src/entities/questionVoted.entity';
     TypeOrmModule.forFeature([Question, Answer, User, QuestionVoted]),
     JwtModule.register({
       secret: 'my-very-strong-secret-key-12345',
-      signOptions: { expiresIn: '365d' },
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [QuestionController],

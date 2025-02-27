@@ -8,6 +8,7 @@ import {
   Headers,
   Param,
   Body,
+  Header,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Request } from 'express';
@@ -27,11 +28,9 @@ export class UserController {
 
   @Get('/info')
   async getUserInfo(
-    @Req() req: Request,
+    @Headers('authorization') authHeader: string,
   ): Promise<{ username: string; email: string }> {
     try {
-      const authHeader = req.headers['authorization'];
-
       if (!authHeader) {
         throw new HttpException(
           'Authorization token is missing',
@@ -39,7 +38,7 @@ export class UserController {
         );
       }
 
-      const token = authHeader.split(' ')[1];
+      const token = authHeader.replace('Bearer ', '').trim();
 
       if (!token) {
         throw new HttpException(
@@ -48,11 +47,26 @@ export class UserController {
         );
       }
 
-      const user = await this.userService.findByToken(token);
+      const decoded = this.jwtService.decode(token) as {
+        username: string;
+        id: number;
+      };
+      console.log(decoded, 'de');
+
+      if (!decoded || !decoded.username) {
+        throw new HttpException(
+          'Invalid token payload',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const user = await this.userService.findByUsername(decoded.username);
+
+      console.log(user, 'de');
 
       if (!user) {
         throw new HttpException(
-          'User not found or invalid token',
+          'User not found or token is invalid',
           HttpStatus.UNAUTHORIZED,
         );
       }

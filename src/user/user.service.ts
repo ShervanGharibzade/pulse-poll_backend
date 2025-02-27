@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateUserDto } from 'src/dto/create-user.dto';
 import { User } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 
@@ -99,5 +100,9 @@ export class UserService {
     user.password = newPassword;
 
     await this.userRepository.save(user);
+  }
+
+  async saveUser(user: CreateUserDto) {
+    return await this.userRepository.save(user);
   }
 }

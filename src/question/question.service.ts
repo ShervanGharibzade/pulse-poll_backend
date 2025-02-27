@@ -27,9 +27,15 @@ export class QuestionService {
 
   async getUserQuestions(token: string) {
     try {
-      const username = await this.jwtService.decode(token);
+      const decodeToken: { username: string; userId: string } =
+        await this.jwtService.decode(token);
+
+      if (!decodeToken || !decodeToken.username) {
+        throw new Error('Invalid token');
+      }
+
       const user = await this.userRepository.findOne({
-        where: { username },
+        where: { username: decodeToken.username },
       });
       return await this.questionRepository.find({
         where: { user: { id: user.id } },
@@ -161,9 +167,15 @@ export class QuestionService {
     createQuestionDto: CreateQuestionDto,
   ) {
     try {
-      const username = await this.jwtService.decode(token);
+      const decodeToken: { username: string; userId: string } =
+        await this.jwtService.decode(token);
+
+      if (!decodeToken || !decodeToken.username) {
+        throw new Error('Invalid token');
+      }
+
       const user = await this.userRepository.findOne({
-        where: { username },
+        where: { username: decodeToken.username },
       });
 
       const newQuestion = this.questionRepository.create({
@@ -176,7 +188,7 @@ export class QuestionService {
       const answers = createQuestionDto.Answers.map((answer) =>
         this.answerRepository.create({
           text: answer.text,
-          is_correct: answer.isCurrect,
+          is_correct: answer.is_correct,
           question: savedQuestion,
         }),
       );

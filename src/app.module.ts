@@ -32,7 +32,7 @@ import { QuestionVoted } from './entities/questionVoted.entity';
     }),
     JwtModule.register({
       secret: 'my-very-strong-secret-key-12345',
-      signOptions: { expiresIn: '365d' },
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [AppController, UserController],

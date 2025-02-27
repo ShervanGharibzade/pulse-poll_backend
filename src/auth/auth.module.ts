@@ -12,7 +12,7 @@ import { User } from 'src/entities/user.entity';
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       secret: 'my-very-strong-secret-key-12345',
-      signOptions: { expiresIn: '365d' },
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [AuthController],

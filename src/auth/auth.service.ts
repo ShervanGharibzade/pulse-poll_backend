@@ -19,12 +19,23 @@ export class AuthService {
 
   async validateUser(username: string, password: string): Promise<User | null> {
     const user = await this.userService.findByUsername(username);
+
     if (!user) {
+      console.log('User not found');
       return null;
     }
 
+    if (!user.password) {
+      console.log('User exists, but password is missing in database');
+      return null;
+    }
+
+    // ✅ Compare the provided password with the hashed password in the DB
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(password, user.password);
+
     if (!isPasswordValid) {
+      console.log('Invalid password');
       return null;
     }
 
@@ -39,13 +50,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const token = this.jwtService.sign(username);
+    const token = this.jwtService.sign({ username: username, id: user.id });
     return token;
   }
 
   async signup(createUserDto: CreateUserDto): Promise<string> {
     const { username, password, email } = createUserDto;
 
+    // Check if user already exists
     const existingUser = await this.userService.findByUsername(username);
     if (existingUser) {
       throw new Error('Username is already taken');
@@ -56,10 +68,15 @@ export class AuthService {
     const user = this.userService.create({
       username,
       password: hashedPassword,
-      email: email,
+      email,
     });
 
-    const token = this.jwtService.sign(user.username);
+    const savedUser = await this.userService.saveUser(user);
+
+    const token = this.jwtService.sign({
+      username: savedUser.username,
+      id: savedUser.id,
+    });
 
     return token;
   }
@@ -82,7 +99,7 @@ export class AuthService {
 
     const token = this.jwtService.sign(
       { userId: user.id },
-      { expiresIn: '365d' },
+      { expiresIn: '1d' },
     );
 
     // Send email logic (pseudo-code)
