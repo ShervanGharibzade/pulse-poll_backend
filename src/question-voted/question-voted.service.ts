@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QuestionVotedDto } from 'src/dto/question-voted';
 import { QuestionVoted } from 'src/entities/questionVoted.entity';
@@ -25,6 +25,18 @@ export class QuestionVotedService {
     );
 
     return voters_info.map((voter) => voter.username);
+  }
+
+  async hasUserVoted(voterId: number): Promise<boolean> {
+    if (!voterId || isNaN(voterId)) {
+      throw new HttpException('Invalid voter ID', HttpStatus.BAD_REQUEST);
+    }
+
+    const vote = await this.QVRepository.findOne({
+      where: { voter_id: voterId },
+    });
+
+    return !!vote;
   }
 
   async saveQuestionVote(question: QuestionVotedDto) {

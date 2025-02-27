@@ -1,6 +1,7 @@
 export class CreateQuestionDto {
   Question: string;
   is_publish: boolean;
+  userId: number;
   Answers: AnswerDto[];
 }
 

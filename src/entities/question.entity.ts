@@ -2,6 +2,7 @@ import {
   BeforeInsert,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -28,7 +29,11 @@ export class Question {
   answers: Answer[];
 
   @ManyToOne(() => User, (user) => user.questions)
+  @JoinColumn({ name: 'userId' })
   user: User;
+
+  @Column()
+  userId: number;
 
   @BeforeInsert()
   generateUid() {

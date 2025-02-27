@@ -11,14 +11,19 @@ import {
   NotFoundException,
   InternalServerErrorException,
   UnauthorizedException,
+  Header,
 } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { AuthGuard } from 'src/auth/authGuard';
 import { CreateQuestionDto } from 'src/dto/create-question';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('questions')
 export class QuestionController {
-  constructor(private readonly questionService: QuestionService) {}
+  constructor(
+    private readonly questionService: QuestionService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Get()
   async getUserQuestions(@Headers('authorization') authHeader: string) {

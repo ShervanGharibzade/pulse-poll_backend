@@ -62,11 +62,12 @@ export class QuestionService {
     }
   }
 
-  async getUserQuestionsPublished(): Promise<Question[]> {
+  async getUserQuestionsPublished(): Promise<any> {
     const questions = await this.questionRepository.find({
       where: { is_publish: true },
       relations: ['answers'],
     });
+    console.log(questions[0].user);
 
     if (!questions.length) {
       throw new NotFoundException('No published questions found for this user');
@@ -75,24 +76,25 @@ export class QuestionService {
     return questions;
   }
 
-  async questionVoting(token: string): Promise<Question[]> {
-    const username = await this.jwtService.decode(token);
-    const user = await this.userRepository.findOne({ where: { username } });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const questions = await this.questionRepository.find({
-      where: { user, is_publish: true },
+  async questionVoting(qId: number, aId: number) {
+    const question = await this.questionRepository.findOne({
+      where: { id: qId },
       relations: ['answers'],
     });
 
-    if (!questions.length) {
-      throw new NotFoundException('No published questions found for this user');
+    if (!question) {
+      throw new NotFoundException('Question not found');
     }
 
-    return questions;
+    const answer = question.answers.find((answer) => answer.id === aId);
+
+    if (!answer) {
+      throw new NotFoundException('Answer not found');
+    }
+
+    answer.total_vote += 1;
+
+    return await this.answerRepository.save(answer);
   }
 
   async updateIsPublish(uid: string): Promise<Question> {
