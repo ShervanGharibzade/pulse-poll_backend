@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { QuestionVotedService } from './question-voted.service';
 import { QuestionVotedDto } from 'src/dto/question-voted';
@@ -28,10 +29,7 @@ export class QuestionVotedController {
     try {
       const token = authHeader?.split(' ')[1];
       if (!token) {
-        throw new HttpException(
-          'Missing authorization token',
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Invalid or expired token');
       }
 
       const decodeToken = this.jwtService.decode(token) as {

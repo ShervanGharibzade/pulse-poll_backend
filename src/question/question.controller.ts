@@ -29,6 +29,11 @@ export class QuestionController {
   async getUserQuestions(@Headers('authorization') authHeader: string) {
     try {
       const token = authHeader?.split(' ')[1];
+
+      if (!token) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
       return await this.questionService.getUserQuestions(token);
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -42,6 +47,11 @@ export class QuestionController {
   ) {
     try {
       const token = authHeader?.split(' ')[1];
+
+      if (!token) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
       return await this.questionService.getQuestionById(id, token);
     } catch (error) {
       throw new NotFoundException(error.message);
@@ -93,10 +103,7 @@ export class QuestionController {
     const token = authHeader?.split(' ')[1];
 
     if (!token) {
-      throw new HttpException(
-        'Invalid authorization format',
-        HttpStatus.UNAUTHORIZED,
-      );
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
     return this.questionService.createQuestionAndAnswers(

@@ -1,17 +1,16 @@
 import {
   Controller,
   Get,
-  Req,
   HttpException,
   HttpStatus,
   Post,
   Headers,
   Param,
   Body,
-  Header,
+  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { QuestionService } from 'src/question/question.service';
 import { Question } from 'src/entities/question.entity';
@@ -30,45 +29,30 @@ export class UserController {
   async getUserInfo(
     @Headers('authorization') authHeader: string,
   ): Promise<{ username: string; email: string }> {
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization token is missing');
+    }
+
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
     try {
-      if (!authHeader) {
-        throw new HttpException(
-          'Authorization token is missing',
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-
-      const token = authHeader.replace('Bearer ', '').trim();
-
-      if (!token) {
-        throw new HttpException(
-          'Invalid authorization format',
-          HttpStatus.UNAUTHORIZED,
-        );
-      }
-
       const decoded = this.jwtService.decode(token) as {
         username: string;
         id: number;
       };
-      console.log(decoded, 'de');
 
       if (!decoded || !decoded.username) {
-        throw new HttpException(
-          'Invalid token payload',
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('Invalid token payload');
       }
 
       const user = await this.userService.findByUsername(decoded.username);
 
-      console.log(user, 'de');
-
       if (!user) {
-        throw new HttpException(
-          'User not found or token is invalid',
-          HttpStatus.UNAUTHORIZED,
-        );
+        throw new UnauthorizedException('User not found or token is invalid');
       }
 
       return {
@@ -76,7 +60,8 @@ export class UserController {
         email: user.email,
       };
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      console.error('Error in getUserInfo:', error);
+      throw new BadRequestException(error.message || 'An error occurred');
     }
   }
 
@@ -84,8 +69,18 @@ export class UserController {
   async getQuestionsPublished(
     @Headers('authorization') authHeader: string,
   ): Promise<Question[]> {
-    const username = await this.jwtService.decode(authHeader);
-    const user = await this.userService.findByUsername(username);
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const decodeToken = (await this.jwtService.decode(token)) as {
+      username: string;
+      id: string;
+    };
+
+    const user = await this.userService.findByUsername(decodeToken.username);
     const questionsPublished =
       await this.questionService.getQuestionPublishedByUserId(user.id);
     return questionsPublished;
@@ -97,8 +92,17 @@ export class UserController {
     @Param('id') qId: string,
     @Body() body: { aId: string },
   ) {
-    const username = await this.jwtService.decode(authHeader);
-    const user = await this.userService.findByUsername(username);
+    const token = authHeader.replace('Bearer ', '').trim();
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const decodeToken = (await this.jwtService.decode(token)) as {
+      username: string;
+      id: string;
+    };
+    const user = await this.userService.findByUsername(decodeToken.username);
 
     const question = await this.questionService.findQuestionById(Number(qId));
 
