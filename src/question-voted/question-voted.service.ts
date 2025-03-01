@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QuestionVotedDto } from 'src/dto/question-voted';
 import { QuestionVoted } from 'src/entities/questionVoted.entity';
@@ -12,6 +18,8 @@ export class QuestionVotedService {
     @InjectRepository(QuestionVoted)
     private QVRepository: Repository<QuestionVoted>,
     private userService: UserService,
+
+    @Inject(forwardRef(() => QuestionService))
     private questionService: QuestionService,
   ) {}
 
@@ -27,13 +35,13 @@ export class QuestionVotedService {
     return voters_info.map((voter) => voter.username);
   }
 
-  async hasUserVoted(voterId: number): Promise<boolean> {
+  async hasUserVoted(voterId: number, questionId: number): Promise<boolean> {
     if (!voterId || isNaN(voterId)) {
       throw new HttpException('Invalid voter ID', HttpStatus.BAD_REQUEST);
     }
 
     const vote = await this.QVRepository.findOne({
-      where: { voter_id: voterId },
+      where: { voter_id: voterId, question_id: questionId },
     });
 
     return !!vote;
@@ -43,6 +51,13 @@ export class QuestionVotedService {
     await this.QVRepository.save(question);
   }
 
+  async findQuestionPublished(id: number) {
+    const p = await this.QVRepository.findOne({
+      where: { question_id: id },
+    });
+    const question = await this.questionService.findQuestionById(p.question_id);
+    return question;
+  }
   async userVoteHistory(user_id: number) {
     const votes = await this.QVRepository.find({
       where: { voter_id: user_id },

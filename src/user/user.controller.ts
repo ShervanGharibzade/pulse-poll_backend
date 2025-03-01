@@ -9,12 +9,14 @@ import {
   Body,
   BadRequestException,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtService } from '@nestjs/jwt';
 import { QuestionService } from 'src/question/question.service';
 import { Question } from 'src/entities/question.entity';
 import { QuestionVotedService } from 'src/question-voted/question-voted.service';
+import { AuthGuard } from 'src/auth/authGuard';
 
 @Controller('user')
 export class UserController {
@@ -26,6 +28,7 @@ export class UserController {
   ) {}
 
   @Get('/info')
+  @UseGuards(AuthGuard)
   async getUserInfo(
     @Headers('authorization') authHeader: string,
   ): Promise<{ username: string; email: string }> {
@@ -66,6 +69,7 @@ export class UserController {
   }
 
   @Get('/vote/questions')
+  @UseGuards(AuthGuard)
   async getQuestionsPublished(
     @Headers('authorization') authHeader: string,
   ): Promise<Question[]> {
@@ -86,7 +90,8 @@ export class UserController {
     return questionsPublished;
   }
 
-  @Post('/vote/questions/:id/:aId')
+  @Post('/vote/questions/:id')
+  @UseGuards(AuthGuard)
   async voteQuestionsPublished(
     @Headers('authorization') authHeader: string,
     @Param('id') qId: string,

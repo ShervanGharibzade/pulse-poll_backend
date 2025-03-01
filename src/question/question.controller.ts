@@ -4,14 +4,11 @@ import {
   Param,
   Post,
   Body,
-  HttpException,
-  HttpStatus,
   UseGuards,
   Headers,
   NotFoundException,
   InternalServerErrorException,
   UnauthorizedException,
-  Header,
 } from '@nestjs/common';
 import { QuestionService } from './question.service';
 import { AuthGuard } from 'src/auth/authGuard';
@@ -26,6 +23,7 @@ export class QuestionController {
   ) {}
 
   @Get()
+  @UseGuards(AuthGuard)
   async getUserQuestions(@Headers('authorization') authHeader: string) {
     try {
       const token = authHeader?.split(' ')[1];
@@ -41,18 +39,45 @@ export class QuestionController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   async getQuestionById(
     @Param('id') id: number,
     @Headers('authorization') authHeader: string,
   ) {
     try {
-      const token = authHeader?.split(' ')[1];
+      const authToken = authHeader?.split(' ')[1];
+      const decodeToken = this.jwtService.decode(authToken) as {
+        username: string;
+        id: string;
+      };
 
-      if (!token) {
+      if (!authToken) {
         throw new UnauthorizedException('Invalid or expired token');
       }
 
-      return await this.questionService.getQuestionById(id, token);
+      return await this.questionService.getQuestionById(
+        id,
+        decodeToken.username,
+      );
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  @Get('/published/find/:id')
+  @UseGuards(AuthGuard)
+  async getQuestionPublishedById(
+    @Param('id') id: number,
+    @Headers('authorization') authHeader: string,
+  ) {
+    try {
+      const authToken = authHeader?.split(' ')[1];
+
+      if (!authToken) {
+        throw new UnauthorizedException('Invalid or expired token');
+      }
+
+      return await this.questionService.getQuestionPublishedById(id);
     } catch (error) {
       throw new NotFoundException(error.message);
     }
@@ -69,6 +94,7 @@ export class QuestionController {
   }
 
   @Post('/publish/:uid')
+  @UseGuards(AuthGuard)
   async publishQuestion(
     @Param('uid') uid: string,
     @Headers('authorization') authHeader: string,

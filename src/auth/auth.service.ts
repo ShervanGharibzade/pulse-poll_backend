@@ -82,8 +82,11 @@ export class AuthService {
   }
 
   async signout(token: string): Promise<string> {
-    const username = await this.jwtService.decode(token);
-    const user = await this.userService.findByUsername(username);
+    const decodeToken = (await this.jwtService.decode(token)) as {
+      username: string;
+      id: string;
+    };
+    const user = await this.userService.findByUsername(decodeToken.username);
     console.log(user);
 
     // TODO:create blackList for tokens

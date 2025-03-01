@@ -11,6 +11,7 @@ import { Answer } from 'src/entities/answer.entity';
 import { CreateQuestionDto } from 'src/dto/create-question';
 import { User } from 'src/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
+import { QuestionVotedService } from 'src/question-voted/question-voted.service';
 
 @Injectable()
 export class QuestionService {
@@ -23,6 +24,7 @@ export class QuestionService {
     @InjectRepository(Answer)
     private readonly answerRepository: Repository<Answer>,
     private readonly jwtService: JwtService,
+    private QuestionVotedService: QuestionVotedService,
   ) {}
 
   async getUserQuestions(token: string) {
@@ -111,8 +113,7 @@ export class QuestionService {
     return await this.questionRepository.save(question);
   }
 
-  async getQuestionById(qId: number, token: string) {
-    const username = await this.jwtService.decode(token);
+  async getQuestionById(qId: number, username: string) {
     const user = await this.userRepository.findOne({ where: { username } });
 
     if (!user) {
@@ -123,6 +124,16 @@ export class QuestionService {
       where: { id: qId, user: { id: user.id } },
       relations: ['answers'],
     });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    return question;
+  }
+
+  async getQuestionPublishedById(qId: number) {
+    const question = await this.QuestionVotedService.findQuestionPublished(qId);
 
     if (!question) {
       throw new NotFoundException('Question not found');

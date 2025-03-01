@@ -7,11 +7,13 @@ import {
   Param,
   Post,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { QuestionVotedService } from './question-voted.service';
 import { QuestionVotedDto } from 'src/dto/question-voted';
 import { JwtService } from '@nestjs/jwt';
 import { QuestionService } from 'src/question/question.service';
+import { AuthGuard } from 'src/auth/authGuard';
 
 @Controller('question/voted')
 export class QuestionVotedController {
@@ -21,6 +23,7 @@ export class QuestionVotedController {
     private readonly jwtService: JwtService,
   ) {}
   @Post('/:qId')
+  @UseGuards(AuthGuard)
   async submitVote(
     @Param('qId') qId: string,
     @Headers('authorization') authHeader: string,
@@ -41,8 +44,10 @@ export class QuestionVotedController {
       const answerId = Number(body.aId);
       const userId = Number(body.userId);
 
-      console.log({ voterId, questionId, answerId, userId, decodeToken });
-      const isUserVoted = await this.questionVotedService.hasUserVoted(voterId);
+      const isUserVoted = await this.questionVotedService.hasUserVoted(
+        voterId,
+        questionId,
+      );
 
       if (isUserVoted) {
         throw new HttpException('user already voted', HttpStatus.BAD_REQUEST);
