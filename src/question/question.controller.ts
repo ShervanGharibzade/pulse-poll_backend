@@ -116,7 +116,7 @@ export class QuestionController {
         status: 201,
       };
     } catch (error) {
-      throw new InternalServerErrorException(error.message);
+      return { error };
     }
   }
 

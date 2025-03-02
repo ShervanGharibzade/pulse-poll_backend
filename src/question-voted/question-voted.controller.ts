@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Header,
   Headers,
   HttpException,
   HttpStatus,
@@ -35,7 +36,7 @@ export class QuestionVotedController {
         throw new UnauthorizedException('Invalid or expired token');
       }
 
-      const decodeToken = this.jwtService.decode(token) as {
+      const decodeToken = (await this.jwtService.decode(token)) as {
         username: string;
         id: string | number;
       };
@@ -84,11 +85,28 @@ export class QuestionVotedController {
 
       return { message: 'Vote successfully submitted' };
     } catch (error) {
-      console.error('Vote submission error:', error);
-      throw new HttpException(
-        `Error submitting vote: ${error.message || 'Unknown error'}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      return { error };
     }
+  }
+
+  @Post('/details/:qId')
+  @UseGuards(AuthGuard)
+  async getQuestionDetails(
+    @Headers('authorization') authHeader: string,
+    @Param('qId') qId: string,
+  ) {
+    const qID = Number(qId);
+    if (isNaN(qID)) {
+      console.log(qID);
+
+      throw new Error('Invalid question ID');
+    }
+    const token = authHeader?.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const usersAnswer = await this.questionVotedService.getVoters(qID);
+    return usersAnswer;
   }
 }

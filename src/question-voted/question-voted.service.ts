@@ -23,16 +23,21 @@ export class QuestionVotedService {
     private questionService: QuestionService,
   ) {}
 
-  async getVoters(qID: number): Promise<string[]> {
+  async getVoters(
+    qID: number,
+  ): Promise<{ username: string; answer: number }[]> {
     const voters = await this.QVRepository.find({
       where: { question_id: qID },
     });
 
     const voters_info = await Promise.all(
-      voters.map((voter) => this.userService.findById(voter.user_id)),
+      voters.map(async (voter) => ({
+        username: (await this.userService.findById(voter.user_id)).username,
+        answer: voter.answer_id,
+      })),
     );
 
-    return voters_info.map((voter) => voter.username);
+    return voters_info;
   }
 
   async hasUserVoted(voterId: number, questionId: number): Promise<boolean> {
