@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Header,
   Headers,
   HttpException,
   HttpStatus,
@@ -97,8 +96,6 @@ export class QuestionVotedController {
   ) {
     const qID = Number(qId);
     if (isNaN(qID)) {
-      console.log(qID);
-
       throw new Error('Invalid question ID');
     }
     const token = authHeader?.split(' ')[1];

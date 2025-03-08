@@ -20,24 +20,7 @@ export class AuthService {
   async validateUser(username: string, password: string): Promise<User | null> {
     const user = await this.userService.findByUsername(username);
 
-    if (!user) {
-      console.log('User not found');
-      return null;
-    }
-
-    if (!user.password) {
-      console.log('User exists, but password is missing in database');
-      return null;
-    }
-
-    // ✅ Compare the provided password with the hashed password in the DB
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(password, user.password);
-
-    if (!isPasswordValid) {
-      console.log('Invalid password');
-      return null;
-    }
+    await bcrypt.compare(password, user.password);
 
     return user;
   }
@@ -86,8 +69,7 @@ export class AuthService {
       username: string;
       id: string;
     };
-    const user = await this.userService.findByUsername(decodeToken.username);
-    console.log(user);
+    await this.userService.findByUsername(decodeToken.username);
 
     // TODO:create blackList for tokens
 

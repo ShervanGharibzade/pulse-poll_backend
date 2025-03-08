@@ -69,7 +69,6 @@ export class QuestionService {
       where: { is_publish: true },
       relations: ['answers'],
     });
-    console.log(questions[0].user);
 
     if (!questions.length) {
       throw new NotFoundException('No published questions found for this user');
